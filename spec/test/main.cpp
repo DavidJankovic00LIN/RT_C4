@@ -54,72 +54,147 @@ int GetValue(int column) // pass this function a column (1-7) and it will return
 }
 
 
-uint8_t winning() {
-    // Provera horizontalnih linija (1-based positions: 1-42)
-    // Row mapping: row 0 = positions 1-7, row 1 = positions 8-14, ..., row 5 = positions 36-42
-    for (int row = 0; row < 6; row++) { // 6 redova
-        for (int col = 1; col <= 4; col++) { // Maksimalno 4 startne tačke po redu (columns 1-4)
-            int pos = row * 7 + col; // 1-based position
-            char symbol = input[pos];
-            if (symbol != ' ' &&
-                symbol == input[pos + 1] &&
-                symbol == input[pos + 2] &&
-                symbol == input[pos + 3]) {
-                return (symbol == 'X') ? 1 : 2;
-            }
-        }
-    }
 
-    // Provera vertikalnih linija
-    for (int col = 1; col <= 7; col++) { // 7 kolona (1-7)
-        for (int row = 0; row <= 2; row++) { // Maksimalno 3 startne tačke po koloni
-            int pos = row * 7 + col; // 1-based position
-            char symbol = input[pos];
-            if (symbol != ' ' &&
-                symbol == input[pos + 7] &&
-                symbol == input[pos + 14] &&
-                symbol == input[pos + 21]) {
-                return (symbol == 'X') ? 1 : 2;
-            }
-        }
-    }
+uint8_t winning()
+{
+    int row, col, idx;
+    unsigned char s;
 
-    // Provera dijagonala (desno-nadole)
-    for (int row = 0; row <= 2; row++) { // 3 startne tačke po redu
-        for (int col = 1; col <= 4; col++) { // 4 startne tačke po koloni
-            int pos = row * 7 + col; // 1-based position
-            char symbol = input[pos];
-            if (symbol != ' ' &&
-                symbol == input[pos + 8] &&
-                symbol == input[pos + 16] &&
-                symbol == input[pos + 24]) {
-                return (symbol == 'X') ? 1 : 2;
-            }
-        }
-    }
 
-    // Provera dijagonala (levo-nadole)
-    for (int row = 0; row <= 2; row++) { // 3 startne tačke po redu
-        for (int col = 4; col <= 7; col++) { // 4 startne tačke po koloni
-            int pos = row * 7 + col; // 1-based position
-            char symbol = input[pos];
-            if (symbol != ' ' &&
-                symbol == input[pos + 6] &&
-                symbol == input[pos + 12] &&
-                symbol == input[pos + 18]) {
-                return (symbol == 'X') ? 1 : 2;
-            }
-        }
-    }
+    // HORIZONTAL 
+  
+    row = 0;
+H_ROW_CHECK:
+    if (row < 6) goto H_COL_INIT;
+    goto V_COL_INIT;
 
-    // Provera da li je tabla puna (positions 1-42)
-    for (int i = 1; i <= 42; i++) {
-        if (input[i] == ' ') {
-            return 0; // Igra se nastavlja
-        }
-    }
+H_COL_INIT:
+    col = 0;
+H_COL_CHECK:
+    if (col <= 3) goto H_CHECK4;
+    row = row + 1;
+    goto H_ROW_CHECK;
 
-    return 3; // Nerešeno
+H_CHECK4:
+    idx = row * 7 + col;
+    s = input[idx]; 
+    if (s != ' ' &&
+        s == input[idx + 1] &&
+        s == input[idx + 2] &&
+        s == input[idx + 3])
+    {
+        return (s == 'X') ? 1 : 2;
+    }
+    col = col + 1;
+    goto H_COL_CHECK;
+
+    // 2) VERTICAL (col: 0..6, row: 0..2)
+
+V_COL_INIT:
+    col = 0;
+V_COL_CHECK:
+    if (col < 7) goto V_ROW_INIT;
+    goto D1_ROW_INIT;
+
+V_ROW_INIT:
+    row = 0;
+V_ROW_CHECK:
+    if (row <= 2) goto V_CHECK4;
+    col = col + 1;
+    goto V_COL_CHECK;
+
+V_CHECK4:
+    idx = row * 7 + col;
+    s = input[idx];
+    if (s != ' ' &&
+        s == input[(row + 1) * 7 + col] &&
+        s == input[(row + 2) * 7 + col] &&
+        s == input[(row + 3) * 7 + col])
+    {
+        return (s == 'X') ? 1 : 2;
+    }
+    row = row + 1;
+    goto V_ROW_CHECK;
+
+    // 3) DIAGONAL "\"
+    
+D1_ROW_INIT:
+    row = 0;
+D1_ROW_CHECK:
+    if (row <= 2) goto D1_COL_INIT;
+    goto D2_ROW_INIT;
+
+D1_COL_INIT:
+    col = 0;
+D1_COL_CHECK:
+    if (col <= 3) goto D1_CHECK4;
+    row = row + 1;
+    goto D1_ROW_CHECK;
+
+D1_CHECK4:
+    idx = row * 7 + col;
+    s = input[idx];
+    if (s != ' ' &&
+        s == input[(row + 1) * 7 + (col + 1)] &&
+        s == input[(row + 2) * 7 + (col + 2)] &&
+        s == input[(row + 3) * 7 + (col + 3)])
+    {
+        return (s == 'X') ? 1 : 2;
+    }
+    col = col + 1;
+    goto D1_COL_CHECK;
+
+
+    // 4) DIAGONAL /
+ 
+D2_ROW_INIT:
+    row = 0;
+D2_ROW_CHECK:
+    if (row <= 2) goto D2_COL_INIT;
+    goto EMPTY_SCAN_INIT;
+
+D2_COL_INIT:
+    col = 3;
+D2_COL_CHECK:
+    if (col < 7) goto D2_CHECK4;
+    row = row + 1;
+    goto D2_ROW_CHECK;
+
+D2_CHECK4:
+    idx = row * 7 + col;
+    s = input[idx];
+    if (s != ' ' &&
+        s == input[(row + 1) * 7 + (col - 1)] &&
+        s == input[(row + 2) * 7 + (col - 2)] &&
+        s == input[(row + 3) * 7 + (col - 3)])
+    {
+        return (s == 'X') ? 1 : 2;
+    }
+    col = col + 1;
+    goto D2_COL_CHECK;
+
+    
+    //  provera praznih
+
+EMPTY_SCAN_INIT:
+    idx = 0;
+EMPTY_SCAN_CHECK:
+    if (idx < 42) goto EMPTY_SCAN_BODY;
+    goto DRAW_RETURN;
+
+EMPTY_SCAN_BODY:
+    s = input[idx];
+    if (s == ' ') {
+        return 0; 
+    }
+    idx = idx + 1;
+    goto EMPTY_SCAN_CHECK;
+
+  
+    //nereseno
+   
+DRAW_RETURN:
+    return 3;
 }
 
 
